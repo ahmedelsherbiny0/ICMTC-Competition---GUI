@@ -20,7 +20,7 @@ app.use(cors());
 
 io.on("connection", (socket) => {
   console.log("🟢 Client connected");
-
+  
   socket.on("led-control", (state) => {
     if (state === "on" || state === "off") {
       serial.write(state + "\n", (err) => {
