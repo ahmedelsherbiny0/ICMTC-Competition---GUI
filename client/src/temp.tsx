@@ -38,7 +38,7 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+    <div>
       <h1>🎮 PS5 Controller GUI</h1>
       <p>Press L1 or R1 to turn LED on!</p>
     </div>
