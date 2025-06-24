@@ -1,48 +1,24 @@
-import { useEffect, useRef } from "react";
-import io from "socket.io-client";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Layout from "./components/layout";
+import ControlPanel from "./pages/control-panel/page";
+import Configurations from "./pages/configurations/page";
 
-const socket = io("http://localhost:4000");
-
-function App() {
-  const gamepadIndex = useRef<number | null>(null);
-
-  useEffect(() => {
-    const handleGamepadConnected = (e: GamepadEvent) => {
-      console.log("Gamepad connected:", e.gamepad);
-      console.log("s");
-      gamepadIndex.current = e.gamepad.index;
-      requestAnimationFrame(updateGamepad);
-    };
-    
-    window.addEventListener("gamepadconnected", handleGamepadConnected);
-    
-    return () => {
-      window.removeEventListener("gamepadconnected", handleGamepadConnected);
-    };
-  }, []);
-
-  const updateGamepad = () => {
-    const gp = navigator.getGamepads()[gamepadIndex.current!];
-    if (gp) {
-      const l1 = gp.buttons[4].pressed; // L1 button index
-      const r1 = gp.buttons[5].pressed; // R1 button index
-      setInterval(() => {
-      console.log("Gamepad state:", gp);
-      console.log("L1:", l1, "R1:", r1);
-      
-      const ledState = l1 || r1 ? "on" : "off";
-      socket.emit("led-control", ledState);
-      }, 1000);
-    }
-    requestAnimationFrame(updateGamepad);
-  };
-
+export default function App() {
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>🎮 PS5 Controller GUI</h1>
-      <p>Press L1 or R1 to turn LED on!</p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/control-panel" replace />} />
+          <Route path="*" element={<Navigate to="/control-panel" replace />} />
+          <Route path="control-panel" element={<ControlPanel />} />
+          <Route path="configurations" element={<Configurations />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
-
-export default App;
