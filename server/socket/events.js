@@ -120,7 +120,7 @@ function mapControllerToCommand(controllerReadings, config) {
 
   // Initialize a default command object. All values are "off" or "stop".
   const command = {
-    esc: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5], // 0.5 represents a stopped motor (if ESC expects -1.0 to 1.0, this should be 0)
+    esc: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], // 0.5 represents a stopped motor (if ESC expects -1.0 to 1.0, this should be 0)
     servo: [0, 0, 0, 0],
     lights: [0, 0],
   };
@@ -133,7 +133,7 @@ function mapControllerToCommand(controllerReadings, config) {
     switch (thrusterConfig.location) {
       case "frontLeft":
         power = intents.surge - intents.sway + intents.yaw;
-        break; //
+        break; 
       case "frontRight":
         power = intents.surge + intents.sway - intents.yaw;
         break;
@@ -161,16 +161,24 @@ function mapControllerToCommand(controllerReadings, config) {
     // Clamp the final power value to the valid range of [-1.0, 1.0].
     power = Math.max(-1.0, Math.min(1.0, power));
 
-    // Convert the power value from [-1.0, 1.0] to the ESC's expected [0.0, 1.0] range.
-    command.esc[index] = (power + 1.0) / 2.0;
   });
 
   // --- Map Gripper and Light Buttons ---   Need to check
-  if (controllerReadings.buttons.L1) command.servo[0] = 1;
-  if (controllerReadings.buttons.Square) command.servo[1] = 1;
-  if (controllerReadings.buttons.R1) command.servo[2] = 1;
-  if (controllerReadings.buttons.Circle) command.servo[3] = 1;
-  if (controllerReadings.buttons.Triangle) {
+  // First Gripper
+  if (controllerReadings.buttons.Y) command.servo[0] = 1;
+  if (controllerReadings.buttons.A) command.servo[0] = -1;
+  if (controllerReadings.buttons.B) command.servo[1] = 1;
+  if (controllerReadings.buttons.X) command.servo[1] = -1;
+
+
+  // Second Gripper
+  if (controllerReadings.buttons.DPad.up) command.servo[2] = 1;
+  if (controllerReadings.buttons.DPad.down) command.servo[2] = -1;
+  if (controllerReadings.buttons.DPad.left) command.servo[3] = 1;
+  if (controllerReadings.buttons.DPad.right) command.servo[3] = -1;
+
+  // Lights
+  if (controllerReadings.buttons.R1) {
     command.lights[0] = 1;
     command.lights[1] = 1;
     // I don't know which light is which, so they are both set to 1 and handle it in esp logic.
@@ -245,13 +253,20 @@ const registerEventHandlers = (io, socket) => {
    *     "R": [0, 0]  // Right stick X and Y -> doubles
    *   },
    *   "buttons": {
-   *     "L1": false,
-   *     "R1": false,
-   *     "Square": false,
-   *     "Circle": false,
-   *     "Triangle": false,
-   *     "L2_Trigger": 0, // 0-1 range for triggers
-   *     "R2_Trigger": 0
+   *     "L1":  false,
+   *     "R1":  false,
+   *     "A":   false, 
+   *     "X":   false,
+   *     "B":   false,
+   *     "Y":   false,
+   *     "L2": 0, // 0-1 range for triggers
+   *     "R2": 0,
+   *     "DPad": {
+   *      "up":    false,
+   *      "down":  false,
+   *      "left":  false,
+   *      "right": false
+   *     }
    *   }
    * }
    */
@@ -273,7 +288,7 @@ const registerEventHandlers = (io, socket) => {
   // --- Configuration Page Events ---
 
   socket.on("config:get", () => {
-    socket.emit("config:data", rovConfiguration);
+    socket.emit("config:data", rovConfiguration); 
   });
 
   /* 
