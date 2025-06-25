@@ -1,5 +1,5 @@
-import { rovConnectionAtom } from "../atoms/atoms";
-import ConnectionButton from "./connection/connection-button";
+import { rovConnectionAtom } from "../../atoms/atoms";
+import ConnectionButton from "./connection-button";
 import { useAtom } from "jotai";
 
 export default function ROVConnection() {

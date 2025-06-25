@@ -13,7 +13,7 @@ export default function LinkNavigator({
     <Link
       to={link}
       className={`py-1 px-5 rounded-2xl ${
-        pathname === link ? "bg-active" : "bg-component-bacground"
+        pathname === link ? "bg-active" : "bg-component-background"
       }`}
     >
       {name}

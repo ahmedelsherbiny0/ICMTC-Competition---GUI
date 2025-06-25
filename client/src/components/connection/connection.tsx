@@ -1,4 +1,4 @@
-import ROVConnection from "../rov-connection";
+import ROVConnection from "./rov-connection";
 import ControllerConnection from "./controller-connection";
 
 export default function Connection({ gap = 5 }: { gap?: number }) {
