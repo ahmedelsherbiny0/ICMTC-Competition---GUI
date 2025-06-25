@@ -1,38 +1,30 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
-const { SerialPort } = require("serialport");
 const cors = require("cors");
+const initializeSocket = require("./socket/socket");
+const { initializeArduino } = require("./utils/esp/connection");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "http://localhost:5173" },
-});
 
-// const serial = new SerialPort({ path: "COM8", baudRate: 9600 });
-/* 
-serial.on("data", (data) => {
-  console.log("Arduino:", data.toString());
-}); */
-
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-io.on("connection", (socket) => {
-  console.log("🟢 Client connected");
+// Initialize Socket.IO
+const io = initializeSocket(server);
 
-  socket.on("led-control", (state) => {
-    console.log(state)
-    if (state === "on" || state === "off") {
-      console.log("LED state:", state);
-    }
-  });
+// Initialize Arduino connection
+initializeArduino(io);
 
-  socket.on("disconnect", () => {
-    console.log("🔴 Client disconnected");
-  });
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-server.listen(4000, () => {
-  console.log("🚀 Server running on http://localhost:4000");
+// Start server
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`ROV Control Server running on http://localhost:${PORT}`);
+  console.log(`Socket.IO ready for connections`);
 });
