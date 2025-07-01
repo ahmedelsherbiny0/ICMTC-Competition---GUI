@@ -29,14 +29,17 @@ const arduinoConnection = require("../utils/esp/connection");
  */
 let rovConfiguration = {
   thrusters: [
-    {location: "frontLeft", reversed: false},
-    {location: "frontRight", reversed: false},
-    {location: "backLeft", reversed: false},
-    {location: "backRight", reversed: false},
-    {location: "bottomLeft", reversed: false},
-    {location: "bottomRight", reversed: false},
+    {location: "frontLeft", enabled: true, reversed: false},
+    {location: "frontRight", enabled: true, reversed: false},
+    {location: "backLeft", enabled: true, reversed: false},
+    {location: "backRight", enabled: true, reversed: false},
+    {location: "bottomLeft", enabled: true, reversed: false},
+    {location: "bottomRight", enabled: true, reversed: false},
   ],
-  grippers: [{location: "front"}, {location: "back"}],
+  grippers: [
+    {location: "front", enabled: true},
+    {location: "back", enabled: true},
+  ],
   sensors: [
     {type: "depth", enabled: true},
     {type: "temperature", enabled: true},
@@ -133,7 +136,7 @@ function mapControllerToCommand(controllerReadings, config) {
     switch (thrusterConfig.location) {
       case "frontLeft":
         power = intents.surge - intents.sway + intents.yaw;
-        break; 
+        break;
       case "frontRight":
         power = intents.surge + intents.sway - intents.yaw;
         break;
@@ -153,6 +156,8 @@ function mapControllerToCommand(controllerReadings, config) {
         power = 0.0;
     }
 
+    if (!thrusterConfig.enabled) power = 0.0;
+
     // Invert power direction if the "reversed" checkbox is ticked in the config.
     if (thrusterConfig.reversed) {
       power = -power;
@@ -160,22 +165,24 @@ function mapControllerToCommand(controllerReadings, config) {
 
     // Clamp the final power value to the valid range of [-1.0, 1.0].
     power = Math.max(-1.0, Math.min(1.0, power));
-
   });
 
   // --- Map Gripper and Light Buttons ---   Need to check
   // First Gripper
-  if (controllerReadings.buttons.Y) command.servo[0] = 1;
-  if (controllerReadings.buttons.A) command.servo[0] = -1;
-  if (controllerReadings.buttons.B) command.servo[1] = 1;
-  if (controllerReadings.buttons.X) command.servo[1] = -1;
-
+  if (rovConfiguration.grippers[0].enabled) {
+    if (controllerReadings.buttons.Y) command.servo[0] = 1;
+    if (controllerReadings.buttons.A) command.servo[0] = -1;
+    if (controllerReadings.buttons.B) command.servo[1] = 1;
+    if (controllerReadings.buttons.X) command.servo[1] = -1;
+  }
 
   // Second Gripper
-  if (controllerReadings.buttons.DPad.up) command.servo[2] = 1;
-  if (controllerReadings.buttons.DPad.down) command.servo[2] = -1;
-  if (controllerReadings.buttons.DPad.left) command.servo[3] = 1;
-  if (controllerReadings.buttons.DPad.right) command.servo[3] = -1;
+  if (rovConfiguration.grippers[1].enabled) {
+    if (controllerReadings.buttons.DPad.up) command.servo[2] = 1;
+    if (controllerReadings.buttons.DPad.down) command.servo[2] = -1;
+    if (controllerReadings.buttons.DPad.left) command.servo[3] = 1;
+    if (controllerReadings.buttons.DPad.right) command.servo[3] = -1;
+  }
 
   // Lights
   if (controllerReadings.buttons.R1) {
@@ -227,6 +234,7 @@ const registerEventHandlers = (io, socket) => {
   });
 
   socket.on("rov:connect", ({comPort}) => {
+    console.log("Hello From Here");
     const arduino = getArduinoApi();
     if (!arduino)
       return socket.emit("rov:error", {
@@ -255,7 +263,7 @@ const registerEventHandlers = (io, socket) => {
    *   "buttons": {
    *     "L1":  false,
    *     "R1":  false,
-   *     "A":   false, 
+   *     "A":   false,
    *     "X":   false,
    *     "B":   false,
    *     "Y":   false,
@@ -288,33 +296,34 @@ const registerEventHandlers = (io, socket) => {
   // --- Configuration Page Events ---
 
   socket.on("config:get", () => {
-    socket.emit("config:data", rovConfiguration); 
+    socket.emit("config:data", rovConfiguration);
   });
 
-  /* 
-    *Expected Payload Format:
-    *{
-    *  "thrusters": [
-    *    { "location": "frontLeft"  ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *    { "location": "frontRight" ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *    { "location": "backLeft"   ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *    { "location": "backRight"  ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *    { "location": "bottomLeft" ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *    { "location": "bottomRight",   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
-    *  ],
-    *  "grippers": [
-    *    { "location": "front" , "enabled": true  , speedRatio: 1.0 },
-    *    { "location": "back"  , "enabled": true  , speedRatio: 1.0 }
-    *  ],
-    *  "sensors": [
-    *    { "type": "depth"       , "enabled": true  },
-    *    { "type": "temperature" , "enabled": true  },
-    *    { "type": "acceleration", "enabled": true  },
-    *    { "type": "rotation"    , "enabled": true  }
-    *  ]
-  */
+  /*
+   *Expected Payload Format:
+   *{
+   *  "thrusters": [
+   *    { "location": "frontLeft"  ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *    { "location": "frontRight" ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *    { "location": "backLeft"   ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *    { "location": "backRight"  ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *    { "location": "bottomLeft" ,   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *    { "location": "bottomRight",   "enabled": true  , "reversed": false , "speedRatio": 1.0 },
+   *  ],
+   *  "grippers": [
+   *    { "location": "front" , "enabled": true  , speedRatio: 1.0 },
+   *    { "location": "back"  , "enabled": true  , speedRatio: 1.0 }
+   *  ],
+   *  "sensors": [
+   *    { "type": "depth"       , "enabled": true  },
+   *    { "type": "temperature" , "enabled": true  },
+   *    { "type": "acceleration", "enabled": true  },
+   *    { "type": "rotation"    , "enabled": true  }
+   *  ]
+   */
   socket.on("config:update", (newConfig) => {
     rovConfiguration = {...rovConfiguration, ...newConfig};
+    console.log(newConfig); // Test
     socket.emit("config:updated", {
       success: true,
       newConfig: rovConfiguration,
@@ -355,7 +364,6 @@ const registerEventHandlers = (io, socket) => {
       lights: [0, 0],
     });
   });
-
 };
 
 module.exports = registerEventHandlers;
