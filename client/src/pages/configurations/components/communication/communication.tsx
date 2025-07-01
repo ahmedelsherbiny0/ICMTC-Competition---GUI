@@ -52,6 +52,7 @@ export default function Communication() {
 
     // --- Register Listeners ---
     socket.on("rov:log", handleLogMessage);
+    socket.on("rov:error", handleLogMessage);
     socket.on("rov:com-ports-list", handlePortsList);
     socket.on("rov:connection-status", handleRovConnectionStatus);
 
@@ -60,6 +61,7 @@ export default function Communication() {
     // --- Cleanup Function ---
     return () => {
       socket.off("rov:log", handleLogMessage);
+      socket.off("rov:error", handleLogMessage);
       socket.off("rov:com-ports-list", handlePortsList);
       socket.off("rov:connection-status", handleRovConnectionStatus);
       clearInterval(gamepadInterval); // Stop the gamepad polling
@@ -70,6 +72,7 @@ export default function Communication() {
   const handleRovConnect = () => {
     if (selectedPort) {
       events.connectToRov(selectedPort);
+      setIsRovConnected(true); // Optimistically set connection status
     } else {
       setLogs((prev) => [...prev.slice(-20), ">> Please select a COM port first."]);
     }

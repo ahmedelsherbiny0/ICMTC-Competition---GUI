@@ -233,8 +233,8 @@ const registerEventHandlers = (io, socket) => {
     }
   });
 
-  socket.on("rov:connect", ({comPort}) => {
-    console.log("Hello From Here");
+  socket.on("rov:connect", (comPort) => {
+    console.log(`Hello From Here ${comPort}`);
     const arduino = getArduinoApi();
     if (!arduino)
       return socket.emit("rov:error", {

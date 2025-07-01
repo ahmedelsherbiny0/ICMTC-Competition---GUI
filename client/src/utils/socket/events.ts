@@ -2,7 +2,7 @@ import {Socket} from "socket.io-client";
 
 export const initializeEvents = (socket: Socket) => ({
   findComPorts: () => {
-    socket.emit("rov:findComPorts");
+    socket.emit("rov:find-com-ports");
   },
   connectToRov: (comPort: string) => {
     if (!comPort) {
