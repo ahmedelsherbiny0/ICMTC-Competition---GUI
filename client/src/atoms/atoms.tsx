@@ -69,3 +69,6 @@ export const persistedTimeAtom = atom(
     localStorage.setItem("competition-time", JSON.stringify(newValue));
   }
 );
+
+export const isRovConnectedAtom = atom(false);
+export const isControllerConnectedAtom = atom(false);

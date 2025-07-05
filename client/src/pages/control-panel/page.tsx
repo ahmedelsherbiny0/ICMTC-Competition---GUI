@@ -1,7 +1,7 @@
-import ConnectionContainer from "../../components/connection/connection-container";
 import ClickedButtonsContainer from "./components/clicked-buttons-container";
 import AnalogTriggersContainer from "./components/analog-triggers-container";
 import CompetitionTimer from "./components/competition-timer";
+import Communication from "../configurations/components/communication/communication";
 
 export default function ControlPanel() {
   return (
@@ -10,7 +10,7 @@ export default function ControlPanel() {
       <div className="flex justify-center gap-5">
         <ClickedButtonsContainer />
         <AnalogTriggersContainer />
-        <ConnectionContainer />
+        <Communication />
         <CompetitionTimer />
       </div>
     </div>

@@ -6,49 +6,59 @@
  * passing them down as props to child components.
  */
 
-import React, { useEffect, useState } from "react";
-import { socket, events } from "../../../../utils/socket/socket";
+import React, {useEffect, useState} from "react";
+import {socket, events} from "../../../../utils/socket/socket";
 import Card from "../../../../components/card";
 import Connection from "../../../../components/connection/connection";
 import SelectMenu from "../SelectMenu";
 import ActionButton from "./ActionButton";
 import Logs from "./Logs";
-
+import {useAtom} from "jotai";
+import {
+  isRovConnectedAtom,
+  isControllerConnectedAtom,
+} from "../../../../atoms/atoms"; // Import atoms for connection states
 export default function Communication() {
   // --- Local State Management ---
-  const [comPorts, setComPorts] = useState<{ path: string }[]>([]);
+  const [comPorts, setComPorts] = useState<{path: string}[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const [selectedPort, setSelectedPort] = useState("");
-  const [isRovConnected, setIsRovConnected] = useState(false);
-  const [isControllerConnected, setIsControllerConnected] = useState(false);
-
+  const [isRovConnected, setIsRovConnected] = useAtom(isRovConnectedAtom);
+  const [isControllerConnected, setIsControllerConnected] =
+    useAtom(isControllerConnectedAtom);
   /**
    * This primary effect hook manages all socket event listeners and the
    * Gamepad API polling for this component.
    */
   useEffect(() => {
     // --- Socket Event Handlers ---
-    const handleLogMessage = (log: { message: string }) => {
+    const handleLogMessage = (log: {message: string}) => {
       const formattedLog = `>> ${log.message}`;
       setLogs((prev) => [...prev.slice(-20), formattedLog]);
     };
 
-    const handlePortsList = (ports: { path: string }[]) => {
+    const handlePortsList = (ports: {path: string}[]) => {
       setComPorts(ports);
     };
 
-    const handleRovConnectionStatus = (status: { status: 'connected' | 'disconnected' }) => {
-      setIsRovConnected(status.status === 'connected');
+    const handleRovConnectionStatus = (status: {
+      status: "connected" | "disconnected";
+    }) => {
+      setIsRovConnected(status.status === "connected");
     };
 
     // --- Gamepad Connection Polling ---
     const checkGamepad = () => {
       const gamepads = navigator.getGamepads();
-      const isConnected = Array.from(gamepads).some(gp => gp !== null);
+      const isConnected = Array.from(gamepads).some(
+        (gp) => gp !== null
+      );
       // Only update state if it has changed to prevent unnecessary re-renders.
-      setIsControllerConnected(prev => (prev === isConnected ? prev : isConnected));
+      setIsControllerConnected((prev) =>
+        prev === isConnected ? prev : isConnected
+      );
     };
-    const gamepadInterval = window.setInterval(checkGamepad, 2000); // Check every 2 seconds.
+    const gamepadInterval = window.setInterval(checkGamepad, 500); // Check every 500 milliseconds.
 
     // --- Register Listeners ---
     socket.on("rov:log", handleLogMessage);
@@ -74,7 +84,10 @@ export default function Communication() {
       events.connectToRov(selectedPort);
       setIsRovConnected(true); // Optimistically set connection status
     } else {
-      setLogs((prev) => [...prev.slice(-20), ">> Please select a COM port first."]);
+      setLogs((prev) => [
+        ...prev.slice(-20),
+        ">> Please select a COM port first.",
+      ]);
     }
   };
 
