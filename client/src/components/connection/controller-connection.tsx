@@ -1,17 +1,24 @@
-import { controllerConnectionAtom } from "../../atoms/atoms";
+/**
+ * @file controller-connection.tsx
+ * @description Renders the UI for displaying the controller's connection status.
+ */
+
 import ConnectionButton from "./connection-button";
-import { useAtom } from "jotai";
 
-export default function ControllerConnection() {
-  const [isConnected, setIsConnected] = useAtom(controllerConnectionAtom);
+interface ControllerConnectionProps {
+  isConnected: boolean;
+}
 
+export default function ControllerConnection({ isConnected }: ControllerConnectionProps) {
   return (
     <div className="flex justify-between items-center w-full">
-      <h1 className="font-bold">Controller</h1>
+      <h1 className="font-bold text-lg">Controller</h1>
       <ConnectionButton
-        label={isConnected ? "Disconnect" : "Connect"}
+        label={isConnected ? "Connected" : "Disconnected"}
         connected={isConnected}
-        onClick={() => setIsConnected(!isConnected)}
+        // The button is for display only; connection is automatic.
+        onClick={() => {}}
+        disabled={true}
       />
     </div>
   );

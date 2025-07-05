@@ -7,7 +7,7 @@ export default function ControlPanel() {
     <div className="flex flex-col mt-20 gap-5 w-full">
       <h1 className="text-4xl text-center">Control Panel</h1>
       <div className="flex justify-center gap-5">
-        <Card>heh</Card>
+        <Card title="Hello">heh</Card>
         <Card>
           <SliderContainer />
         </Card>

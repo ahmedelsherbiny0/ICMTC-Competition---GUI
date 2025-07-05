@@ -112,7 +112,6 @@ const disconnectFromArduino = () => {
     if (err) {
       log(`Error closing port: ${err.message}`);
     } else {
-      log(`Disconnected from ${arduinoPath}.`);
       // Reset state on successful disconnection.
       isArduinoReady = false;
       port = null;
