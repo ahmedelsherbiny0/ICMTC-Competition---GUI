@@ -215,12 +215,12 @@ const registerEventHandlers = (io, socket) => {
 
   // --- ROV Hardware Connection Events ---
 
-  socket.on("rov:connection-status", async () => {
+  socket.on("rov:connection-status", () => {
     const arduino = getArduinoApi();
-
+    console.log(arduino.isArduinoReady());
     io.emit("rov:connection-status", {
-      status: arduino.isArduinoReady ? "connected" : "disconnected",
-      message: arduino.isArduinoReady
+      status: arduino.isArduinoReady() ? "connected" : "disconnected",
+      message: arduino.isArduinoReady()
         ? "ROV is connected."
         : "ROV is disconnected.",
     });
