@@ -1,13 +1,11 @@
 interface SliderProps {
   value: number;
-  onChange: (value: number) => void;
   min?: number;
   max?: number;
 }
 
 export default function Slider({
   value,
-  onChange,
   min = 0,
   max = 255,
 }: SliderProps) {
@@ -17,7 +15,6 @@ export default function Slider({
       min={min}
       max={max}
       value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
       className="w-44 h-2 rounded-lg appearance-none bg-[#2f2f2f] accent-slider-dot cursor-pointer"
       style={{
         backgroundImage: `linear-gradient(to right, #006699 ${(
@@ -25,6 +22,7 @@ export default function Slider({
           100
         ).toFixed(2)}%, #00669922 0%)`,
       }}
+      readOnly
     />
   );
 }
