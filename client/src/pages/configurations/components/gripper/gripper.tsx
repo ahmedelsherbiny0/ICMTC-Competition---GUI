@@ -5,7 +5,7 @@
  * updated to match the latest UI design with a display-only slider and toggleable items.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { socket, events } from '../../../../utils/socket/socket';
 import Card from '../../../../components/card';
 import ConfigurationRow from '../ConfigurationRow';

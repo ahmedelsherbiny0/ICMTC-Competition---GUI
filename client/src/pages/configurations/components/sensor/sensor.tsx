@@ -6,7 +6,7 @@
  * for a dynamic number of sensors.
  */
 
-import React, {useState, useEffect, useCallback} from "react";
+import {useState, useEffect, useCallback} from "react";
 import {socket, events} from "../../../../utils/socket/socket";
 import Card from "../../../../components/card";
 import NumberInput from "./NumberInput";

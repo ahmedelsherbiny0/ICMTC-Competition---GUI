@@ -3,7 +3,7 @@
  * @description A component to display a scrolling list of log messages.
  */
 
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface LogsProps {
   logMessages: string[];

@@ -72,3 +72,17 @@ export const persistedTimeAtom = atom(
 
 export const isRovConnectedAtom = atom(false);
 export const isControllerConnectedAtom = atom(false);
+
+export interface ROVSensorData {
+  depth: number;
+  mpu: {
+    acc: [number, number, number];
+    gyro: [number, number, number];
+    temp_in: number;
+  };
+}
+
+export const rovSensorDataAtom = atomWithStorage<ROVSensorData | null>(
+  "rov-sensor-data",
+  null
+);

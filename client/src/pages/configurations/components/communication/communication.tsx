@@ -6,38 +6,40 @@
  * passing them down as props to child components.
  */
 
-import React, {useEffect, useState} from "react";
-import {socket, events} from "../../../../utils/socket/socket";
+import { useEffect, useState } from "react";
+import { socket, events } from "../../../../utils/socket/socket";
 import Card from "../../../../components/card";
 import Connection from "../../../../components/connection/connection";
 import SelectMenu from "../SelectMenu";
 import ActionButton from "./ActionButton";
 import Logs from "./Logs";
-import {useAtom} from "jotai";
+import { useAtom } from "jotai";
 import {
   isRovConnectedAtom,
   isControllerConnectedAtom,
-} from "../../../../atoms/atoms"; // Import atoms for connection states
+} from "../../../../../atoms/atoms"; // Import atoms for connection states
+
 export default function Communication() {
   // --- Local State Management ---
-  const [comPorts, setComPorts] = useState<{path: string}[]>([]);
+  const [comPorts, setComPorts] = useState<{ path: string }[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const [selectedPort, setSelectedPort] = useState("");
   const [isRovConnected, setIsRovConnected] = useAtom(isRovConnectedAtom);
-  const [isControllerConnected, setIsControllerConnected] =
-    useAtom(isControllerConnectedAtom);
+  const [isControllerConnected, setIsControllerConnected] = useAtom(
+    isControllerConnectedAtom
+  );
   /**
    * This primary effect hook manages all socket event listeners and the
    * Gamepad API polling for this component.
    */
   useEffect(() => {
     // --- Socket Event Handlers ---
-    const handleLogMessage = (log: {message: string}) => {
+    const handleLogMessage = (log: { message: string }) => {
       const formattedLog = `>> ${log.message}`;
       setLogs((prev) => [...prev.slice(-20), formattedLog]);
     };
 
-    const handlePortsList = (ports: {path: string}[]) => {
+    const handlePortsList = (ports: { path: string }[]) => {
       setComPorts(ports);
     };
 
@@ -50,9 +52,7 @@ export default function Communication() {
     // --- Gamepad Connection Polling ---
     const checkGamepad = () => {
       const gamepads = navigator.getGamepads();
-      const isConnected = Array.from(gamepads).some(
-        (gp) => gp !== null
-      );
+      const isConnected = Array.from(gamepads).some((gp) => gp !== null);
       // Only update state if it has changed to prevent unnecessary re-renders.
       setIsControllerConnected((prev) =>
         prev === isConnected ? prev : isConnected
@@ -67,7 +67,8 @@ export default function Communication() {
     socket.on("rov:connection-status", handleRovConnectionStatus);
 
     events.findComPorts(); // Fetch ports on initial component mount
-
+    events.isRovConnected();
+    
     // --- Cleanup Function ---
     return () => {
       socket.off("rov:log", handleLogMessage);
@@ -76,7 +77,7 @@ export default function Communication() {
       socket.off("rov:connection-status", handleRovConnectionStatus);
       clearInterval(gamepadInterval); // Stop the gamepad polling
     };
-  }, []); // Empty dependency array ensures this runs only once on mount.
+  }, [setIsControllerConnected, setIsRovConnected]); // Empty dependency array ensures this runs only once on mount.
 
   // --- Action Handlers ---
   const handleRovConnect = () => {

@@ -1,4 +1,3 @@
-import React from 'react';
 import Communication from './components/communication/communication';
 import ThrusterConfiguration from './components/thruster/thruster';
 import GrippersConfiguration from './components/gripper/gripper';
