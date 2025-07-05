@@ -1,6 +1,6 @@
 /**
  * @file communication.tsx
- * @version 3.0.0
+ * @version 1.0.0
  * @description The main container component for the "Communication Configuration" card.
  * It now manages all state and logic for ROV and Controller connections internally,
  * passing them down as props to child components.

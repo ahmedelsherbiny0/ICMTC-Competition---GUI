@@ -1,40 +1,49 @@
 import Card from "../../../components/card";
 import { rovSensorDataAtom } from "../../../../atoms/atoms";
-import { useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import type { ReactNode } from "react";
 
 export default function SensorsDisplay() {
-  const sensorsData = useAtomValue(rovSensorDataAtom);
+  const [sensorsData, setSensorData] = useAtom(rovSensorDataAtom);
+
+  setSensorData (sensorsData || ({
+    mpu: {
+      acc: [0, 0, 0],
+      gyro: [0, 0, 0],
+      temp_in: 0,
+    },
+    depth: 0,
+  }));
   const labels = ["X", "Y", "Z"];
   // console.log(sensorsData);
 
   return (
     <Card title="Sensors Data">
       <div className="flex flex-col w-full gap-5">
-        <Conatainer>
+        <Container>
           <Name name={"Depth Sensor (cm)"} />
           <Value value={sensorsData?.depth} />
-        </Conatainer>
-        <Conatainer>
+        </Container>
+        <Container>
           <Name name={"MPU (Acceleration)"} />
           <div className="flex gap-2">
             {sensorsData?.mpu.acc.map((value, index) => (
-              <Value key={index} value={value} label={labels[index] || "?"} />
+              <Value key={index} value={value || 0.0} label={labels[index] || "?"} />
             ))}
           </div>
-        </Conatainer>
-        <Conatainer>
+        </Container>
+        <Container>
           <Name name={"MPU (Rotation)"} />
           <div className="flex gap-2">
             {sensorsData?.mpu.gyro.map((value, index) => (
-              <Value key={index} value={value} label={labels[index] || "?"} />
+              <Value key={index} value={value || 0.0} label={labels[index] || "?"} />
             ))}
           </div>
-        </Conatainer>
-        <Conatainer>
+        </Container>
+        <Container>
           <Name name={"MPU (Temperature)"} />
           <Value value={sensorsData?.depth} />
-        </Conatainer>
+        </Container>
       </div>
     </Card>
   );
@@ -61,7 +70,7 @@ function Value({
   );
 }
 
-function Conatainer({ children }: { children: ReactNode }) {
+function Container({ children }: { children: ReactNode }) {
   return (
     <div className="flex justify-between items-center w-full">{children}</div>
   );
