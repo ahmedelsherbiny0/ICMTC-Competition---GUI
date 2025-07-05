@@ -4,7 +4,6 @@
  * color and click handler to toggle its enabled/disabled state.
  */
 
-import React from 'react';
 
 interface ConfigItemProps {
   /** The text to display inside the item box (e.g., "Thruster 1"). */

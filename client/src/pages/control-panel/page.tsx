@@ -2,15 +2,21 @@ import ClickedButtonsContainer from "./components/clicked-buttons-container";
 import AnalogTriggersContainer from "./components/analog-triggers-container";
 import CompetitionTimer from "./components/competition-timer";
 import Communication from "../configurations/components/communication/communication";
+import SensorsDisplay from "./components/sensors-display";
+import L2R2Triggers from "./components/L2R2Triggers";
 
 export default function ControlPanel() {
   return (
-    <div className="flex flex-col mt-20 px-10 gap-5 w-full">
-      <h1 className="text-4xl text-center">Control Panel</h1>
-      <div className="flex justify-center gap-5">
-        <ClickedButtonsContainer />
-        <AnalogTriggersContainer />
+    <div className="grid grid-cols-[repeat(auto-fit,_minmax(100px,_1fr))] justify-center mt-20 px-2 gap-5">
+      <ClickedButtonsContainer />
+      <AnalogTriggersContainer />
+
+      <div className="flex flex-col gap-5">
+        <L2R2Triggers />
         <Communication />
+      </div>
+      <div className="flex flex-col gap-5">
+        <SensorsDisplay />
         <CompetitionTimer />
       </div>
     </div>

@@ -3,7 +3,6 @@
  * @description A component for the "Reversed" label and its associated checkbox.
  */
 
-import React from 'react';
 
 interface CheckboxProps {
   /** The label text to display next to the checkbox. */

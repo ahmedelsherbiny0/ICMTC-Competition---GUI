@@ -5,7 +5,7 @@
  * updated to include a test slider and enable/disable toggle functionality.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { socket, events } from "../../../../utils/socket/socket";
 import Card from "../../../../components/card";
 import ConfigurationRow from "../ConfigurationRow";

@@ -10,7 +10,7 @@ import Configurations from "./pages/configurations/page";
 import ControllerData from "./pages/configurations/components/communication/controllerData";
 
 export default function App() {
-  ControllerData(); // Initialize controller data polling
+  ControllerData();
   return (
     <Router>
       <Routes>

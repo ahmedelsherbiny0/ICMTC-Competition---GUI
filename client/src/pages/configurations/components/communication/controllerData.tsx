@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { isControllerConnectedAtom, controllerDataAtom } from "../../../../atoms/atoms";
+import {
+  isControllerConnectedAtom,
+  controllerDataAtom,
+} from "../../../../../atoms/atoms";
 import { useSetAtom } from "jotai";
 import { useAtomValue } from "jotai";
 import { events } from "../../../../utils/socket/socket";
@@ -84,10 +87,10 @@ export default function ControllerData() {
         setControllerData(newControllerData);
 
         // console.clear();
-        console.log(
-          "Controller Data:",
-          JSON.stringify(newControllerData, null, 3)
-        );
+        // console.log(
+        //   "Controller Data:",
+        //   JSON.stringify(newControllerData, null, 3)
+        // );
         events.emitControllerData(newControllerData);
       }
 

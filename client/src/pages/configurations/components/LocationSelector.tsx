@@ -4,8 +4,6 @@
  * for choosing an item's physical location on the ROV.
  */
 
-import React from 'react';
-
 interface LocationSelectorProps {
   /** The currently selected value for the dropdown. */
   value: string;
