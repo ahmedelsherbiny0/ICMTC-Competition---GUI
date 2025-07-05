@@ -1,8 +1,8 @@
 export default function KeypadButton({
-  isClicked,
+  isClicked = false,
   buttonCharacter,
 }: {
-  isClicked: boolean;
+  isClicked?: boolean;
   buttonCharacter: string;
 }) {
   return (

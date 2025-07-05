@@ -1,0 +1,72 @@
+import { controllerDataAtom } from "../../../atoms/atoms";
+import { useAtomValue } from "jotai";
+import SliderContainer from "./slider-container";
+import KeypadButton from "./keypad-button";
+import Card from "../../../components/card";
+
+type Direction = {
+  label: string;
+  axis: "x" | "y";
+  sign: 1 | -1;
+};
+
+const directions: Direction[] = [
+  { label: "🡹", axis: "y", sign: -1 },
+  { label: "🡻", axis: "y", sign: 1 },
+  { label: "🢀", axis: "x", sign: -1 },
+  { label: "🢂", axis: "x", sign: 1 },
+];
+
+function getDirectionIntensity(x: number, y: number, dir: Direction): number {
+  const value = dir.axis === "x" ? x : y;
+  const intensity = dir.sign * value;
+  return Math.max(0, Math.min(1, intensity));
+}
+
+export default function AnalogTriggersContainer() {
+  const controllerData = useAtomValue(controllerDataAtom);
+
+  return (
+    <Card>
+      <div className="flex flex-col gap-8 p-4 w-96">
+        {(["L", "R"] as const).map((stickKey) => {
+          const [x, y] = controllerData.axes[stickKey];
+
+          return (
+            <div key={stickKey}>
+              <h2 className="text-lg font-semibold mb-2">{stickKey} - Stick</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {directions.map((dir) => {
+                  const intensity = getDirectionIntensity(x, y, dir);
+                  return (
+                    <div
+                      key={`${stickKey}-${dir.label}`}
+                      className="flex flex-row items-center gap-8"
+                    >
+                      <KeypadButton buttonCharacter={dir.label} />
+                      <SliderContainer value={Math.round(intensity * 255)} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-row items-center gap-8">
+            <KeypadButton buttonCharacter={"L2"} />
+            <SliderContainer
+              value={Math.round(controllerData.buttons.L2 * 255)}
+            />
+          </div>
+          <div className="flex flex-row items-center gap-8">
+            <KeypadButton buttonCharacter={"R2"} />
+            <SliderContainer
+              value={Math.round(controllerData.buttons.R2 * 255)}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}

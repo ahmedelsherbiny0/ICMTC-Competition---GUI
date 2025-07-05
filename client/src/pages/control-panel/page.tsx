@@ -1,17 +1,17 @@
-import Card from "../../components/card";
-import SliderContainer from "./components/analog-value-container";
 import ConnectionContainer from "../../components/connection/connection-container";
+import ClickedButtonsContainer from "./components/clicked-buttons-container";
+import AnalogTriggersContainer from "./components/analog-triggers-container";
+import CompetitionTimer from "./components/competition-timer";
 
 export default function ControlPanel() {
   return (
-    <div className="flex flex-col mt-20 gap-5 w-full">
+    <div className="flex flex-col mt-20 px-10 gap-5 w-full">
       <h1 className="text-4xl text-center">Control Panel</h1>
       <div className="flex justify-center gap-5">
-        <Card title="Hello">heh</Card>
-        <Card>
-          <SliderContainer />
-        </Card>
+        <ClickedButtonsContainer />
+        <AnalogTriggersContainer />
         <ConnectionContainer />
+        <CompetitionTimer />
       </div>
     </div>
   );
