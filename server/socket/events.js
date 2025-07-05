@@ -157,7 +157,6 @@ function mapControllerToCommand(controllerReadings, config) {
     }
 
     if (!thrusterConfig.enabled) power = 0.0;
-
     // Invert power direction if the "reversed" checkbox is ticked in the config.
     if (thrusterConfig.reversed) {
       power = -power;
@@ -165,6 +164,7 @@ function mapControllerToCommand(controllerReadings, config) {
 
     // Clamp the final power value to the valid range of [-1.0, 1.0].
     power = Math.max(-1.0, Math.min(1.0, power));
+    command.esc[index] = power;
   });
 
   // --- Map Gripper and Light Buttons ---   Need to check
@@ -178,10 +178,10 @@ function mapControllerToCommand(controllerReadings, config) {
 
   // Second Gripper
   if (rovConfiguration.grippers[1].enabled) {
-    if (controllerReadings.buttons.DPad.up) command.servo[2] = 1;
-    if (controllerReadings.buttons.DPad.down) command.servo[2] = -1;
-    if (controllerReadings.buttons.DPad.left) command.servo[3] = 1;
-    if (controllerReadings.buttons.DPad.right) command.servo[3] = -1;
+    if (controllerReadings.buttons.up) command.servo[2] = 1;
+    if (controllerReadings.buttons.down) command.servo[2] = -1;
+    if (controllerReadings.buttons.left) command.servo[3] = 1;
+    if (controllerReadings.buttons.right) command.servo[3] = -1;
   }
 
   // Lights
@@ -282,6 +282,7 @@ const registerEventHandlers = (io, socket) => {
   socket.on("controller:data", (controllerReadings) => {
     const arduino = getArduinoApi();
     // Do nothing if the ROV is not physically connected.
+    // console.log(controllerReadings); // Test
     if (!arduino || !arduino.isArduinoReady()) {
       return;
     }
@@ -290,6 +291,7 @@ const registerEventHandlers = (io, socket) => {
       controllerReadings,
       rovConfiguration
     );
+    // console.log(command); // Test
     arduino.sendDataToArduino(command);
   });
 

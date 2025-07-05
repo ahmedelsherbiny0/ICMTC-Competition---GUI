@@ -27,5 +27,8 @@ export const initializeEvents = (socket: Socket) => ({
   // Not Implemented yet in the server
   emitGripperTest: (gripperIndex: number, value: number) => {
     socket.emit("config:gripper-test", { gripperIndex, value });
+  },
+  emitControllerData: (controllerData:object) => {
+    socket.emit("controller:data", controllerData);
   }
-});
+}); 
