@@ -52,7 +52,7 @@ const handleArduinoData = (data) => {
   try {
     const jsonData = JSON.parse(data);
     // Broadcast the parsed sensor data to all connected clients.
-    console.log(jsonData); // For debugging: log the received data
+    // console.log(jsonData); // For debugging: log the received data
     io.emit("rov:sensor-data", jsonData);
   } catch (error) {
     // This catch block is crucial for handling non-JSON boot messages from the ESP32.
