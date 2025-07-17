@@ -256,9 +256,37 @@ const registerEventHandlers = (io, socket) => {
     arduino.connectToArduino(comPort);
   });
 
+  socket.on("rov:depth-sensor-connect", (comPort) => {
+    const arduino = getArduinoApi();
+    if (!arduino)
+      return socket.emit("rov:error", {
+        message: "Arduino module not ready.",
+      });
+    if (!comPort)
+      return socket.emit("rov:error", {
+        message: "No COM Port was provided.",
+      });
+    arduino.connectToDepthSensor(comPort);
+  });
+
+  socket.on("rov:depth-sensor-status", () => {
+    const arduino = getArduinoApi();
+    console.log(arduino.isDepthSensorReady());
+    io.emit("rov:depth-sensor-status", {
+      status: arduino.isDepthSensorReady() ? "connected" : "disconnected",
+      message: arduino.isDepthSensorReady()
+        ? "Depth Sensor is connected."
+        : "Depth Sensor is disconnected.",
+    });
+  });
   socket.on("rov:disconnect", () => {
     const arduino = getArduinoApi();
     if (arduino) arduino.disconnectFromArduino();
+  });
+
+  socket.on("rov:depth-sensor-disconnect", () => {
+    const arduino = getArduinoApi();
+    if (arduino) arduino.disconnectFromDepthSensor();
   });
 
   // --- Core Data Streaming Event ---

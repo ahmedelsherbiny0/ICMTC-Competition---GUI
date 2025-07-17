@@ -18,13 +18,17 @@ const {ReadlineParser} = require("@serialport/parser-readline");
 //                                 MODULE STATE
 //=================================================================================
 
-let port = null; // Holds the active serial port instance when connected.
-let parser = null; // Holds the ReadlineParser instance to read data line-by-line. ->
+let port1 = null; // Holds the active serial port instance when connected.
+let parser1 = null; // Holds the ReadlineParser instance to read data line-by-line. ->
 // From the serial port because ESP32 sends data line-by-line in serial communication.
 let isArduinoReady = false; // A boolean flag to track the connection status.
 let arduinoPath = null; // Stores the path of the connected port (e.g., 'COM5').
 let io = null; // Caches the main Socket.IO server instance for broadcasting events.
 
+
+let port2 = null; // Holds the active serial port instance for the depth sensor.
+let parser2 = null; // Holds the ReadlineParser instance for the depth sensor.
+let isDepthSensorReady = false; // A boolean flag to track the depth sensor connection status.
 //=================================================================================
 //                                CORE FUNCTIONS
 //=================================================================================
@@ -57,6 +61,18 @@ const handleArduinoData = (data) => {
   } catch (error) {
     // This catch block is crucial for handling non-JSON boot messages from the ESP32.
     log(`Error parsing JSON from Arduino: ${error.message}`);
+    log(`Received malformed data: ${data}`);
+  }
+};
+
+
+const handleDepthSensorData = (data) => {
+  try {
+    const jsonData = JSON.parse(data);
+    // Broadcast the parsed depth sensor data to all connected clients.
+    io.emit("rov:depth-sensor-data", jsonData);
+  } catch (error) {
+    log(`Error parsing JSON from Depth Sensor: ${error.message}`);
     log(`Received malformed data: ${data}`);
   }
 };
@@ -127,6 +143,30 @@ const disconnectFromArduino = () => {
   });
 };
 
+
+const disconnectFromDepthSensor = () => {
+  if (!port2 || !port2.isOpen) {
+    log("Already disconnected from Depth Sensor.");
+    return;
+  }
+  port2.close((err) => {
+    if (err) {
+      log(`Error closing Depth Sensor port: ${err.message}`);
+    } else {
+      // Reset state on successful disconnection.
+      isDepthSensorReady = false;
+      port2 = null;
+      parser2 = null;
+      depthSensorPath = null;
+      // Notify client that the Depth Sensor is now disconnected.
+      io.emit("rov:depth-sensor-status", {
+        status: "disconnected",
+        message: "Depth Sensor has been disconnected.",
+      });
+    }
+  });
+};
+
 /**
  * Establishes a connection to the Arduino on a specified COM port.
  * It configures the serial port and attaches event listeners for 'open',
@@ -147,13 +187,15 @@ const connectToArduino = (path) => {
   arduinoPath = path;
 
   // Instantiate the serial port with the path and a standard baud rate for ESP32.
-  port = new SerialPort({path, baudRate: 115200});
+  port1 = new SerialPort({path, baudRate: 115200});
+
   // Pipe the port's output through a ReadlineParser to receive data line-by-line.
-  parser = port.pipe(new ReadlineParser({delimiter: "\n"}));
+  parser1 = port1.pipe(new ReadlineParser({delimiter: "\n"}));
+
 
   // --- Serial Port Event Listeners ---
 
-  port.on("open", () => {
+  port1.on("open", () => {
     isArduinoReady = true;
     log(`Successfully connected to ROV at ${path}.`);
     io.emit("rov:connection-status", {
@@ -163,9 +205,11 @@ const connectToArduino = (path) => {
     });
   });
 
-  parser.on("data", handleArduinoData);
 
-  port.on("error", (err) => {
+  parser1.on("data", handleArduinoData);
+
+
+  port1.on("error", (err) => {
     log(`Serial Port Error: ${err.message}`);
     isArduinoReady = false;
     io.emit("rov:connection-status", {
@@ -174,7 +218,8 @@ const connectToArduino = (path) => {
     });
   });
 
-  port.on("close", () => {
+
+  port1.on("close", () => {
     isArduinoReady = false;
     if (arduinoPath) {
       // Only log/emit if it was a previously active connection.
@@ -188,9 +233,61 @@ const connectToArduino = (path) => {
   });
 };
 
-//=================================================================================
-//                              MODULE INITIALIZATION
-//=================================================================================
+
+const connectToDepthSensor = (path) => {
+  if (isDepthSensorReady) {
+    // If already connected, do nothing or disconnect first from the old one for a fresh connection.
+    if (path === depthSensorPath) {
+      log(`Already connected to ${path}.`);
+      return;
+    }
+    disconnectFromDepthSensor();
+  }
+
+  log(`Attempting to connect to ${path}...`);
+  depthSensorPath = path;
+
+  // Instantiate the serial port with the path and a standard baud rate for ESP32.
+  port2 = new SerialPort({path, baudRate: 115200});
+  // Pipe the port's output through a ReadlineParser to receive data line-by-line.
+  parser2 = port2.pipe(new ReadlineParser({delimiter: "\n"}));
+
+  // --- Serial Port Event Listeners ---
+
+  port2.on("open", () => {
+    isDepthSensorReady = true;
+    log(`Successfully connected to Depth Sensor at ${path}.`);
+    io.emit("rov:depth-sensor-status", {
+      status: "connected",
+      path,
+      message: `Depth Sensor connected successfully on ${path}.`,
+    });
+  });
+
+  parser2.on("data", handleDepthSensorData);
+
+  port2.on("error", (err) => {
+    log(`Depth Sensor Port Error: ${err.message}`);
+    isDepthSensorReady = false;
+    io.emit("rov:depth-sensor-status", {
+      status: "error",
+      message: `Error with Depth Sensor connection: ${err.message}`,
+    });
+  });
+
+  port2.on("close", () => {
+    isDepthSensorReady = false;
+    if (depthSensorPath) {
+      // Only log/emit if it was a previously active connection.
+      log(`Connection to ${depthSensorPath} closed.`);
+      io.emit("rov:depth-sensor-status", {
+        status: "disconnected",
+        message: "Depth Sensor connection lost.",
+      });
+      depthSensorPath = null;
+    }
+  });
+};
 
 /**
  * Initializes the Arduino connection manager. This function is called once at
@@ -207,7 +304,10 @@ const initializeArduino = (socketIoInstance) => {
   // in this module without creating circular dependency issues.
   module.exports.api = {
     connectToArduino,
+    connectToDepthSensor,
     disconnectFromArduino,
+    disconnectFromDepthSensor,
+    isDepthSensorReady: () => isDepthSensorReady,
     listPorts,
     sendDataToArduino,
     isArduinoReady: () => isArduinoReady,
