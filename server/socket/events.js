@@ -192,6 +192,25 @@ function mapControllerToCommand(controllerReadings, config) {
   return command;
 }
 
+
+const handleRosCommand = (command, config) => {
+
+  // Map the ROS command to the appropriate ESP32 command format.
+  const espCommand = {
+    esc: [0, 0, 0, 0, 0],
+    servo: [0, 0, 0, 0],
+    lights: [0, 0],
+  };
+
+  config.thrusters.forEach((thruster, index) => {
+    if (thruster.enabled) {
+      espCommand.esc[index] = command.esc[index] || 0;
+    }
+  });
+
+  return espCommand;
+}
+
 //=================================================================================
 //                            SOCKET EVENT REGISTRATION
 //=================================================================================
@@ -302,6 +321,19 @@ const registerEventHandlers = (io, socket) => {
       rovConfiguration
     );
     console.log(command); // Test
+    arduino.sendDataToArduino(command);
+  });
+
+  /**
+   * @event ros:command
+   * @description (NEW) Listens for pre-formatted command data originating from the autonomous ROS.
+   * It directly forwards this command to the ESP32 without any mapping.
+   */
+  socket.on("ros:command", (command) => {
+    const arduino = getArduinoApi();
+    if (!arduino || !arduino.isArduinoReady()) return;
+    command = handleRosCommand(command, rovConfiguration);
+    // console.log("ROS Command Received:", command); // Test
     arduino.sendDataToArduino(command);
   });
 
