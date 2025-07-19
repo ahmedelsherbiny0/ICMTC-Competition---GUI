@@ -63,7 +63,7 @@ function Value({
   return (
     <div className="flex flex-col justify-center items-center">
       {label && <h2>{label}</h2>}
-      <div className="bg-[var(--color-component-background)] p-2 rounded-lg w-16 text-center">
+      <div className="bg-[var(--color-component-background)] p-2 rounded-lg w-[68px] text-center text-[12px]">
         {value?.toFixed(2)}
       </div>
     </div>

@@ -134,7 +134,7 @@ function mapControllerToCommand(controllerReadings, config) {
     // Apply vectored control logic based on the thruster's configured location.
     switch (thrusterConfig.location) {
       case "top":
-        power = -intents.heave;
+        power = intents.heave;
         break;
       case "frontLeft":
         power = -intents.surge - intents.sway - intents.yaw;
