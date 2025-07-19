@@ -10,6 +10,8 @@ export const controllerConnectionAtom = atomWithStorage<boolean>(
   false
 );
 
+export const controlModeAtom = atom<'PILOT' | 'AUTONOMOUS'>('PILOT');
+
 export const controllerDataAtom = atomWithStorage<{
   axes: {
     L: number[];

@@ -34,4 +34,7 @@ export const initializeEvents = (socket: Socket) => ({
   isRovConnected: () => {
     socket.emit("rov:connection-status");
   },
+  sendRosCommand: (command: object) => {
+    socket.emit("ros:command", command);
+  },
 });

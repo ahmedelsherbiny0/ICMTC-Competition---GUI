@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   isControllerConnectedAtom,
   controllerDataAtom,
+  controlModeAtom,
 } from "../../../../../atoms/atoms";
 import { useSetAtom } from "jotai";
 import { useAtomValue } from "jotai";
@@ -13,6 +14,7 @@ export default function ControllerData() {
   const isConnected = useAtomValue(isControllerConnectedAtom);
   const setControllerData = useSetAtom(controllerDataAtom);
   const [gamepadIndex, setGamepadIndex] = useState<number | null>(null);
+  const [controlMode] = useAtomValue(controlModeAtom);
 
   useEffect(() => {
     const connectHandler = (e: GamepadEvent) => {
@@ -91,7 +93,8 @@ export default function ControllerData() {
         //   "Controller Data:",
         //   JSON.stringify(newControllerData, null, 3)
         // );
-        events.emitControllerData(newControllerData);
+        if (controlMode === "PILOT")
+          events.emitControllerData(newControllerData);
       }
 
       animationFrameId = requestAnimationFrame(pollGamepad);
