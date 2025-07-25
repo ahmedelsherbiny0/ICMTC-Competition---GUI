@@ -31,8 +31,8 @@ let rovConfiguration = {
   thrusters: [
     {location: "top", enabled: true, reversed: false},
     {location: "frontLeft", enabled: true, reversed: false},
-    {location: "frontRight", enabled: true, reversed: false},
     {location: "backLeft", enabled: true, reversed: false},
+    {location: "frontRight", enabled: true, reversed: false},
     {location: "backRight", enabled: true, reversed: false},
   ],
   grippers: [
@@ -111,7 +111,7 @@ function mapControllerToCommand(controllerReadings, config) {
   // Note: Y-axis is inverted (-1) because gamepads typically report "up" as a negative value.
   const intents = {
     surge:
-      (controllerReadings.axes.L[1] || 0) * -1 * sensitivity.joystick, // Forward/Backward
+      (controllerReadings.axes.L[1] || 0) * sensitivity.joystick, // Forward/Backward
     sway: (controllerReadings.axes.L[0] || 0) * sensitivity.joystick, // Strafe Left/Right
     yaw:
       ((controllerReadings.buttons.R2 || 0) -
@@ -122,7 +122,7 @@ function mapControllerToCommand(controllerReadings, config) {
 
   // Initialize a default command object. All values are "off" or "stop".
   const command = {
-    esc: [0.0, 0.0, 0.0, 0.0, 0.0], // 0.5 represents a stopped motor (if ESC expects -1.0 to 1.0, this should be 0)
+    esc: [0.0, 0.0, 0.0, 0.0, 0.0],
     servo: [0, 0, 0, 0],
     lights: [0, 0],
   };
@@ -134,16 +134,22 @@ function mapControllerToCommand(controllerReadings, config) {
     // Apply vectored control logic based on the thruster's configured location.
     switch (thrusterConfig.location) {
       case "top":
-        power = -intents.heave;
+        power = intents.heave;
         break;
       case "frontLeft":
-        power = -intents.surge - intents.sway - intents.yaw;
+        if (intents.surge > 0 && intents.sway >= 0)
+          power = +intents.surge + intents.sway + intents.yaw;
+        else power = (intents.sway >= 0) ? -intents.sway - intents.yaw : intents.yaw;
         break;
       case "frontRight":
-        power = -intents.surge + intents.sway + intents.yaw;
+        if (intents.surge > 0)
+          power = +intents.surge - intents.sway - intents.yaw;
+        else power = -intents.sway + intents.yaw;
+        if (intents.yaw < 0) power = -intents.sway;
         break;
       case "backLeft":
         power = +intents.surge - intents.sway + intents.yaw;
+        if (intents.sway < 0) power += intents.sway;
         break;
       case "backRight":
         power = +intents.surge + intents.sway - intents.yaw;
