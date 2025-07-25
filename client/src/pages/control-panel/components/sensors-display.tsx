@@ -10,6 +10,7 @@ export default function SensorsDisplay() {
     mpu: {
       acc: [0, 0, 0],
       gyro: [0, 0, 0],
+      angle:[0.0,0.0],
       temp_in: 0,
     },
     depth: 0,
@@ -36,6 +37,14 @@ export default function SensorsDisplay() {
           <Name name={"MPU (Rotation)"} />
           <div className="flex gap-2">
             {sensorsData?.mpu.gyro.map((value, index) => (
+              <Value key={index} value={value || 0.0} label={labels[index] || "?"} />
+            ))}
+          </div>
+        </Container>
+        <Container>
+          <Name name={"MPU (Angle)"} />
+          <div className="flex gap-2">
+            {sensorsData?.mpu.angle?.map((value, index) => (
               <Value key={index} value={value || 0.0} label={labels[index] || "?"} />
             ))}
           </div>

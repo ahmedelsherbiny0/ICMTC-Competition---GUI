@@ -68,7 +68,7 @@ export default function ThrusterConfiguration() {
 
 
   const thrusterLocationOptions = [
-    "frontLeft", "frontRight", "backLeft", "backRight", "bottomLeft", "bottomRight",
+    "frontLeft", "frontRight", "backLeft", "backRight", "top",
   ];
 
   if (thrusters.length === 0) {
