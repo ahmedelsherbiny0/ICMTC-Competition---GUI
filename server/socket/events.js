@@ -143,12 +143,12 @@ function mapControllerToCommand(controllerReadings, config) {
         break;
       case "frontRight":
         if (intents.surge < 0)
-          power = intents.surge - intents.sway + intents.yaw;
-        else power = -intents.sway + intents.yaw;
+          power = intents.surge - intents.sway - intents.yaw;
+        else power = -intents.sway - intents.yaw;
         if (intents.yaw < 0) power = -intents.sway;
         break;
       case "backLeft":
-        power = -intents.surge - intents.sway - intents.yaw;
+        power = -intents.surge - intents.sway + intents.yaw;
         if (intents.sway < 0) power += intents.sway;
         break;
       case "backRight":
