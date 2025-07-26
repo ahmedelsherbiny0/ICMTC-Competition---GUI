@@ -78,6 +78,7 @@ export interface ROVSensorData {
   mpu: {
     acc: [number, number, number];
     gyro: [number, number, number];
+    angle: [number, number];
     temp_in: number;
   };
 }

@@ -29,22 +29,21 @@ const arduinoConnection = require("../utils/esp/connection");
  */
 let rovConfiguration = {
   thrusters: [
-    { location: "frontLeft", enabled: true, reversed: false },
-    { location: "frontRight", enabled: true, reversed: false },
-    { location: "backLeft", enabled: true, reversed: false },
-    { location: "backRight", enabled: true, reversed: false },
-    { location: "bottomLeft", enabled: true, reversed: false },
-    { location: "bottomRight", enabled: true, reversed: false },
+    {location: "top", enabled: true, reversed: false},
+    {location: "frontLeft", enabled: true, reversed: false},
+    {location: "frontRight", enabled: true, reversed: false},
+    {location: "backLeft", enabled: true, reversed: false},
+    {location: "backRight", enabled: true, reversed: false},
   ],
   grippers: [
-    { location: "front", enabled: true },
-    { location: "back", enabled: true },
+    {location: "front", enabled: true},
+    {location: "back", enabled: true},
   ],
   sensors: [
-    { type: "depth", enabled: true },
-    { type: "temperature", enabled: true },
-    { type: "acceleration", enabled: true },
-    { type: "rotation", enabled: true },
+    {type: "depth", enabled: true},
+    {type: "temperature", enabled: true},
+    {type: "acceleration", enabled: true},
+    {type: "rotation", enabled: true},
   ],
   sensitivity: {
     joystick: "High", // Can be 'Low', 'Normal', 'High'
@@ -111,18 +110,19 @@ function mapControllerToCommand(controllerReadings, config) {
   // Calculate high-level movement "intents" from -1.0 to 1.0.
   // Note: Y-axis is inverted (-1) because gamepads typically report "up" as a negative value.
   const intents = {
-    surge: (controllerReadings.axes.L[1] || 0) * -1 * sensitivity.joystick, // Forward/Backward
+    surge:
+      (controllerReadings.axes.L[1] || 0) * -1 * sensitivity.joystick, // Forward/Backward
     sway: (controllerReadings.axes.L[0] || 0) * sensitivity.joystick, // Strafe Left/Right
-    yaw: (controllerReadings.axes.R[0] || 0) * sensitivity.yaw, // Turn Left/Right
-    heave:
+    yaw:
       ((controllerReadings.buttons.R2 || 0) -
         (controllerReadings.buttons.L2 || 0)) *
-      sensitivity.joystick, // Up/Down
+      sensitivity.yaw, // Turn Left/Right
+    heave: (controllerReadings.axes.R[1] || 0) * sensitivity.joystick, // Up/Down
   };
 
   // Initialize a default command object. All values are "off" or "stop".
   const command = {
-    esc: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], // 0.5 represents a stopped motor (if ESC expects -1.0 to 1.0, this should be 0)
+    esc: [0.0, 0.0, 0.0, 0.0, 0.0], // 0.5 represents a stopped motor (if ESC expects -1.0 to 1.0, this should be 0)
     servo: [0, 0, 0, 0],
     lights: [0, 0],
   };
@@ -133,23 +133,20 @@ function mapControllerToCommand(controllerReadings, config) {
     let power = 0.0;
     // Apply vectored control logic based on the thruster's configured location.
     switch (thrusterConfig.location) {
+      case "top":
+        power = -intents.heave;
+        break;
       case "frontLeft":
-        power = intents.surge - intents.sway + intents.yaw;
+        power = -intents.surge - intents.sway - intents.yaw;
         break;
       case "frontRight":
-        power = intents.surge + intents.sway - intents.yaw;
+        power = -intents.surge + intents.sway + intents.yaw;
         break;
       case "backLeft":
-        power = intents.surge + intents.sway + intents.yaw;
+        power = +intents.surge - intents.sway + intents.yaw;
         break;
       case "backRight":
-        power = intents.surge - intents.sway - intents.yaw;
-        break;
-      case "bottomLeft":
-        power = intents.heave;
-        break;
-      case "bottomRight":
-        power = intents.heave;
+        power = +intents.surge + intents.sway - intents.yaw;
         break;
       default:
         power = 0.0;
@@ -160,6 +157,8 @@ function mapControllerToCommand(controllerReadings, config) {
     if (thrusterConfig.reversed) {
       power = -power;
     }
+
+    power = power === -0 ? 0 : power;
 
     // Clamp the final power value to the valid range of [-1.0, 1.0].
     power = Math.max(-1.0, Math.min(1.0, power));
@@ -257,9 +256,37 @@ const registerEventHandlers = (io, socket) => {
     arduino.connectToArduino(comPort);
   });
 
+  socket.on("rov:depth-sensor-connect", (comPort) => {
+    const arduino = getArduinoApi();
+    if (!arduino)
+      return socket.emit("rov:error", {
+        message: "Arduino module not ready.",
+      });
+    if (!comPort)
+      return socket.emit("rov:error", {
+        message: "No COM Port was provided.",
+      });
+    arduino.connectToDepthSensor(comPort);
+  });
+
+  socket.on("rov:depth-sensor-status", () => {
+    const arduino = getArduinoApi();
+    console.log(arduino.isDepthSensorReady());
+    io.emit("rov:depth-sensor-status", {
+      status: arduino.isDepthSensorReady() ? "connected" : "disconnected",
+      message: arduino.isDepthSensorReady()
+        ? "Depth Sensor is connected."
+        : "Depth Sensor is disconnected.",
+    });
+  });
   socket.on("rov:disconnect", () => {
     const arduino = getArduinoApi();
     if (arduino) arduino.disconnectFromArduino();
+  });
+
+  socket.on("rov:depth-sensor-disconnect", () => {
+    const arduino = getArduinoApi();
+    if (arduino) arduino.disconnectFromDepthSensor();
   });
 
   // --- Core Data Streaming Event ---
@@ -293,6 +320,7 @@ const registerEventHandlers = (io, socket) => {
     const arduino = getArduinoApi();
     // Do nothing if the ROV is not physically connected.
     // console.log(controllerReadings); // Test
+    // console.log(controllerReadings.axis.R[1]); / Test
     if (!arduino || !arduino.isArduinoReady()) {
       return;
     }
@@ -301,7 +329,7 @@ const registerEventHandlers = (io, socket) => {
       controllerReadings,
       rovConfiguration
     );
-    // console.log(command); // Test
+    console.log(command); // Test
     arduino.sendDataToArduino(command);
   });
 
@@ -334,7 +362,7 @@ const registerEventHandlers = (io, socket) => {
    *  ]
    */
   socket.on("config:update", (newConfig) => {
-    rovConfiguration = { ...rovConfiguration, ...newConfig };
+    rovConfiguration = {...rovConfiguration, ...newConfig};
     console.log(newConfig); // Test
     socket.emit("config:updated", {
       success: true,
@@ -342,7 +370,7 @@ const registerEventHandlers = (io, socket) => {
     });
   });
 
-  socket.on("config:thruster-test", ({ thrusterIndex, value }) => {
+  socket.on("config:thruster-test", ({thrusterIndex, value}) => {
     const arduino = getArduinoApi();
     if (!arduino || !arduino.isArduinoReady()) return;
     const escCommand = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]; // Default to all stopped
@@ -357,7 +385,7 @@ const registerEventHandlers = (io, socket) => {
     });
   });
 
-  socket.on("config:gripper-test", ({ gripperIndex, value }) => {
+  socket.on("config:gripper-test", ({gripperIndex, value}) => {
     const arduino = getArduinoApi();
     if (!arduino || !arduino.isArduinoReady()) return;
     const servoCommand = [0, 0, 0, 0];
