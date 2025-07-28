@@ -117,8 +117,9 @@ function mapControllerToCommand(controllerReadings, config) {
       ((controllerReadings.buttons.R2 || 0) -
         (controllerReadings.buttons.L2 || 0)) *
       sensitivity.yaw, // Turn Left/Right
-    heave: (controllerReadings.axes.R[1] || 0) * sensitivity.joystick, // Up/Down
+    heave: (controllerReadings.axes.R[1] || 0) * -1 * sensitivity.joystick, // Up/Down
   };
+  // console.log(intents.surge);
 
   // Initialize a default command object. All values are "off" or "stop".
   const command = {
@@ -138,13 +139,13 @@ function mapControllerToCommand(controllerReadings, config) {
         break;
       case "frontLeft":
         if (intents.surge < 0 && intents.sway >= 0)
-          power = -intents.surge + intents.sway + intents.yaw;
+          power = intents.sway + intents.yaw;
         else power = (intents.sway >= 0) ? -intents.sway + intents.yaw : intents.yaw;
         if (intents.yaw < 0) power -= intents.yaw;
         break;
       case "frontRight":
         if (intents.surge < 0)
-          power = intents.surge + intents.sway + intents.yaw;
+          power = intents.sway + intents.yaw;
         else power = +intents.sway + intents.yaw;
         break;
       case "backLeft":
@@ -168,6 +169,10 @@ function mapControllerToCommand(controllerReadings, config) {
 
     // Clamp the final power value to the valid range of [-1.0, 1.0].
     power = Math.max(-1.0, Math.min(1.0, power));
+    if(thrusterConfig.location === "backLeft" && intents.surge < -0.2) {
+      // console.log(intents.surge);
+      power = 0.9 * power;
+    }
     command.esc[index] = power;
   });
 
@@ -296,7 +301,7 @@ const registerEventHandlers = (io, socket) => {
 
   socket.on("controller:data", (controllerReadings) => {
     const arduino = getArduinoApi();
-    console.log(controllerReadings)
+    // console.log(controllerReadings)
     // Do nothing if the ROV is not physically connected.
     // console.log(controllerReadings); // Test
     // console.log(controllerReadings.axis.R[1]); / Test
@@ -308,7 +313,7 @@ const registerEventHandlers = (io, socket) => {
       controllerReadings,
       rovConfiguration
     );
-    console.log(command); // Test
+    // console.log(command); // Test
     arduino.sendDataToArduino(command);
   });
 
